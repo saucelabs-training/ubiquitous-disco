@@ -1,5 +1,6 @@
 package com.aig;
 
+import org.junit.After;
 import org.junit.Before;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -41,5 +42,13 @@ public class BaseTest {
             e.printStackTrace();
         }
         driver = new RemoteWebDriver(url, capabilities);
+    }
+
+    @After
+    public void tearDown() {
+        if(driver != null)
+        {
+            driver.quit();
+        }
     }
 }
