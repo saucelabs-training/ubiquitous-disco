@@ -3,7 +3,10 @@ package com.aig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
+import org.junit.rules.TestName;
+import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
+import org.junit.runner.Description;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -15,6 +18,27 @@ import java.net.URL;
 
 public class BaseTest {
     public RemoteWebDriver driver;
+
+    @Rule
+    public final TestRule watchman = new TestWatcher() {
+        public String testStatus;
+
+        // This method gets invoked if the test fails for any reason:
+        @Override
+        protected void failed(Throwable e, Description description) {
+            testStatus = "failed";
+        }
+        @Override
+        protected void succeeded(Description description) {
+            testStatus = "passed";
+        }
+    };
+    @Rule
+    public TestName testName = new TestName() {
+        public String getMethodName() {
+            return String.format("%s", super.getMethodName());
+        }
+    };
 
     @Before
     public void setup() {
@@ -29,7 +53,7 @@ public class BaseTest {
         sauceOpts.setCapability("username", sauceUsername);
         sauceOpts.setCapability("accessKey", sauceAccessKey);
         //TODO future addition
-        //sauceOpts.setCapability("name", method.getName());
+        sauceOpts.setCapability("name", testName.getMethodName());
         sauceOpts.setCapability("build", "best-practices");
         sauceOpts.setCapability("tags", "['best-practices', 'best-practices']");
 
@@ -49,7 +73,7 @@ public class BaseTest {
 
     @After
     public void tearDown() {
-        //updateResult();
+        //updateResult(watchman);
         stop();
     }
 
