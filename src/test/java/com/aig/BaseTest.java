@@ -2,6 +2,9 @@ package com.aig;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TestWatcher;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.CapabilityType;
@@ -46,9 +49,21 @@ public class BaseTest {
 
     @After
     public void tearDown() {
+        //updateResult();
+        stop();
+    }
+
+    private void stop() {
         if(driver != null)
         {
             driver.quit();
         }
+    }
+
+    private void updateResult(String result) {
+        getJSExecutor().executeScript("sauce:job-result=" + result);
+    }
+    protected JavascriptExecutor getJSExecutor() {
+        return driver;
     }
 }
