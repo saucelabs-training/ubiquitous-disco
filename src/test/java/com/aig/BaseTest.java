@@ -15,30 +15,22 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BaseTest {
     public RemoteWebDriver driver;
 
     @Rule
-    public final TestRule watchman = new TestWatcher() {
-        public String testStatus;
+    public TestContext watchman = new TestContext();
 
-        // This method gets invoked if the test fails for any reason:
-        @Override
-        protected void failed(Throwable e, Description description) {
-            testStatus = "failed";
-        }
-        @Override
-        protected void succeeded(Description description) {
-            testStatus = "passed";
-        }
-    };
     @Rule
     public TestName testName = new TestName() {
         public String getMethodName() {
             return String.format("%s", super.getMethodName());
         }
     };
+    private String build;
 
     @Before
     public void setup() {
@@ -52,10 +44,8 @@ public class BaseTest {
         MutableCapabilities sauceOpts = new MutableCapabilities();
         sauceOpts.setCapability("username", sauceUsername);
         sauceOpts.setCapability("accessKey", sauceAccessKey);
-        //TODO future addition
         sauceOpts.setCapability("name", testName.getMethodName());
-        sauceOpts.setCapability("build", "best-practices");
-        sauceOpts.setCapability("tags", "['best-practices', 'best-practices']");
+        sauceOpts.setCapability("build", getBuild());
 
         MutableCapabilities capabilities = new MutableCapabilities();
         capabilities.setCapability(ChromeOptions.CAPABILITY,  chromeOpts);
@@ -69,25 +59,39 @@ public class BaseTest {
             e.printStackTrace();
         }
         driver = new RemoteWebDriver(url, capabilities);
+        watchman.setDriver(driver);
     }
 
-    @After
-    public void tearDown() {
-        //updateResult(watchman);
-        stop();
-    }
-
-    private void stop() {
-        if(driver != null)
-        {
-            driver.quit();
+    public String getBuild() {
+        if (build != null) {
+            return build;
+        } else if (getEnvironmentVariable(knownCITools.get("Jenkins")) != null) {
+            return getEnvironmentVariable("BUILD_NAME") + ": " + getEnvironmentVariable("BUILD_NUMBER");
+        } else if (getEnvironmentVariable(knownCITools.get("Bamboo")) != null) {
+            return getEnvironmentVariable("bamboo_shortJobName") + ": " + getEnvironmentVariable("bamboo_buildNumber");
+        } else if (getEnvironmentVariable(knownCITools.get("Travis")) != null) {
+            return getEnvironmentVariable("TRAVIS_JOB_NAME") + ": " + getEnvironmentVariable("TRAVIS_JOB_NUMBER");
+        } else if (getEnvironmentVariable(knownCITools.get("Circle")) != null) {
+            return getEnvironmentVariable("CIRCLE_JOB") + ": " + getEnvironmentVariable("CIRCLE_BUILD_NUM");
+        } else if (getEnvironmentVariable(knownCITools.get("GitLab")) != null) {
+            return getEnvironmentVariable("CI_JOB_NAME") + ": " + getEnvironmentVariable("CI_JOB_ID");
+        } else if (getEnvironmentVariable(knownCITools.get("TeamCity")) != null) {
+            return getEnvironmentVariable("TEAMCITY_PROJECT_NAME") + ": " + getEnvironmentVariable("BUILD_NUMBER");
+        } else {
+            return "Build Time: " + System.currentTimeMillis();
         }
     }
-
-    private void updateResult(String result) {
-        getJSExecutor().executeScript("sauce:job-result=" + result);
+    protected String getEnvironmentVariable(String key) {
+        return System.getenv(key);
     }
-    protected JavascriptExecutor getJSExecutor() {
-        return driver;
+    public static final Map<String, String> knownCITools;
+    static {
+        knownCITools = new HashMap<>();
+        knownCITools.put("Jenkins", "BUILD_TAG");
+        knownCITools.put("Bamboo", "bamboo_agentId");
+        knownCITools.put("Travis", "TRAVIS_JOB_ID");
+        knownCITools.put("Circle", "CIRCLE_JOB");
+        knownCITools.put("GitLab", "CI");
+        knownCITools.put("TeamCity", "TEAMCITY_PROJECT_NAME");
     }
 }
