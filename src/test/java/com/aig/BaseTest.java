@@ -1,13 +1,8 @@
 package com.aig;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.rules.TestName;
-import org.junit.rules.TestRule;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.Description;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.CapabilityType;
@@ -22,7 +17,7 @@ public class BaseTest {
     public RemoteWebDriver driver;
 
     @Rule
-    public TestContext watchman = new TestContext();
+    public TestContext testContext = new TestContext();
 
     @Rule
     public TestName testName = new TestName() {
@@ -59,7 +54,7 @@ public class BaseTest {
             e.printStackTrace();
         }
         driver = new RemoteWebDriver(url, capabilities);
-        watchman.setDriver(driver);
+        testContext.setDriver(driver);
     }
 
     public String getBuild() {
