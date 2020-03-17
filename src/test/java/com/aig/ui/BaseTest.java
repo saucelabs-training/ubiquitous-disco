@@ -1,4 +1,4 @@
-package com.aig;
+package com.aig.ui;
 
 import org.junit.After;
 import org.junit.Before;
